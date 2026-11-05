@@ -1,59 +1,38 @@
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-require("dotenv").config();
+const express = require('express');
+const cors = require('cors');
 
 const app = express();
 
-// Enable CORS and body parsing
-app.use(cors());
+// Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
-// Serve static files from the 'public' directory
-app.use(express.static(path.join(process.cwd(), "public")));
+// Your PayHero STK Push API Route
+app.post('/api/payhero/stk-push', async (req, res) => {
+  try {
+    const paymentData = req.body;
 
-// Import PayHero route handlers safely
-try {
-    const payheroRoutes = require("./routes/payhero");
-    app.use("/api/payhero", payheroRoutes);
-} catch (err) {
-    console.log("PayHero routes not loaded:", err.message);
-}
+    // TODO: Add your PayHero API integration logic here
+    // Example: Make a fetch request to PayHero's live API using process.env.PAYHERO_API_KEY
 
-// Explicit routes for standard HTML views
-app.get("/", (req, res) => {
-    res.sendFile(path.join(process.cwd(), "public", "index.html"));
-});
+    console.log("Received STK Push request:", paymentData);
 
-app.get("/mpesa", (req, res) => {
-    res.sendFile(path.join(process.cwd(), "public", "mpesa.html"));
-});
-
-app.get("/card", (req, res) => {
-    res.sendFile(path.join(process.cwd(), "public", "card.html"));
-});
-
-// Fallback 404 handler for missing API endpoints
-app.use("/api/*", (req, res) => {
-    res.status(404).json({
-        success: false,
-        message: `API endpoint ${req.originalUrl} not found.`
+    // Send a successful JSON response back to the client
+    return res.status(200).json({
+      success: true,
+      message: "STK push request processed successfully",
+      data: paymentData
     });
-});
 
-// Catch-all fallback for SPA client-side routing
-app.get("*", (req, res) => {
-    res.sendFile(path.join(process.cwd(), "public", "index.html"));
-});
-
-const PORT = process.env.PORT || 3000;
-
-if (require.main === module) {
-    app.listen(PORT, () => {
-        console.log(`🚀 Server running on http://localhost:${PORT}`);
+  } catch (error) {
+    console.error("STK Push Route Error:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
     });
-}
+  }
+});
 
-// Export the Express app for Vercel serverless functions
+// IMPORTANT: Do NOT use app.listen() here! 
+// Export the app so Vercel can handle it serverlessly.
 module.exports = app;
