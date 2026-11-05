@@ -48,6 +48,12 @@ app.get("*", (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-    console.log(`🚀 Talanta Sports City Server running on http://localhost:${PORT}`);
-});
+// Only call app.listen when running locally, not on Vercel serverless
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`🚀 Talanta Sports City Server running on http://localhost:${PORT}`);
+    });
+}
+
+// Export the Express app for Vercel deployment
+module.exports = app;
