@@ -10,30 +10,31 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files (index.html, card.html, CSS, JS, images) from 'public' directory
-app.use(express.static(path.join(__dirname, "public")));
+// Serve static files from the 'public' directory
+app.use(express.static(path.join(process.cwd(), "public")));
 
-// Import PayHero route handlers
-const payheroRoutes = require("./routes/payhero");
-
-// Mount PayHero routes under /api/payhero
-// This ensures POST requests to /api/payhero/stk-push route correctly
-app.use("/api/payhero", payheroRoutes);
+// Import PayHero route handlers safely
+try {
+    const payheroRoutes = require("./routes/payhero");
+    app.use("/api/payhero", payheroRoutes);
+} catch (err) {
+    console.log("PayHero routes not loaded:", err.message);
+}
 
 // Explicit routes for standard HTML views
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(path.join(process.cwd(), "public", "index.html"));
 });
 
 app.get("/mpesa", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "mpesa.html"));
+    res.sendFile(path.join(process.cwd(), "public", "mpesa.html"));
 });
 
 app.get("/card", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "card.html"));
+    res.sendFile(path.join(process.cwd(), "public", "card.html"));
 });
 
-// Fallback 404 handler for missing API endpoints (returns JSON instead of HTML)
+// Fallback 404 handler for missing API endpoints
 app.use("/api/*", (req, res) => {
     res.status(404).json({
         success: false,
@@ -43,17 +44,16 @@ app.use("/api/*", (req, res) => {
 
 // Catch-all fallback for SPA client-side routing
 app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(path.join(process.cwd(), "public", "index.html"));
 });
 
 const PORT = process.env.PORT || 3000;
 
-// Only call app.listen when running locally, not on Vercel serverless
 if (require.main === module) {
     app.listen(PORT, () => {
-        console.log(`🚀 Talanta Sports City Server running on http://localhost:${PORT}`);
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
     });
 }
 
-// Export the Express app for Vercel deployment
+// Export the Express app for Vercel serverless functions
 module.exports = app;
